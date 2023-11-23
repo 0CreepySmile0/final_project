@@ -1,16 +1,32 @@
 # import database module
+import csv, os
 
+from database import Database, Table, read_csv, write_csv
 # define a funcion called initializing
+db = Database()
 
 def initializing():
-    pass
+
 
 # here are things to do in this function:
 
     # create an object to read all csv files that will serve as a persistent state for this program
-
+    persons = read_csv("persons")
+    log_in = read_csv("login")
+    project = read_csv("Project_table")
+    advisor_pen = read_csv("Advisor_pending_request")
+    member_pen = read_csv("Member_pending_request")
     # create all the corresponding tables for those csv files
-
+    persons_table = Table("persons", persons)
+    login_table = Table("login", log_in)
+    project_table = Table("Project_table", project)
+    advisor_pen_table = Table("Advisor_pending_request", advisor_pen)
+    member_pen_table = Table("Member_pending_request", member_pen)
+    db.insert(persons_table)
+    db.insert(login_table)
+    db.insert(project_table)
+    db.insert(advisor_pen_table)
+    db.insert(member_pen_table)
     # see the guide how many tables are needed
 
     # add all these tables to the database
@@ -19,7 +35,14 @@ def initializing():
 # define a funcion called login
 
 def login():
-    pass
+    user = input("Username : ")
+    password = input("Password : ")
+    for i in db.search("login").table:
+        if i["username"] == user and i["password"] == password:
+            return [i["ID"], i["role"]]
+        else:
+            continue
+    return None
 
 # here are things to do in this function:
    # add code that performs a login task
@@ -28,7 +51,10 @@ def login():
 
 # define a function called exit
 def exit():
-    pass
+    write_csv("login", db)
+    write_csv("Project_table", db)
+    write_csv("Advisor_pending_request", db)
+    write_csv("Member_pending_request", db)
 
 # here are things to do in this function:
    # write out all the tables that have been modified to the corresponding csv files
@@ -40,8 +66,8 @@ def exit():
 # make calls to the initializing and login functions defined above
 
 initializing()
-val = login()
-
+# val = login()
+db.search("Project_table").insert({"ProjectID": "8265489", "Title": "Noob", "Lead": "Danny", "Member1": "John", "Member2": "Sam", "Advisor": "Josh", "Status": "single"})
 # based on the return value for login, activate the code that performs activities according to the role defined for that person_id
 
 # if val[1] = 'admin':
