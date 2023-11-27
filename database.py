@@ -15,15 +15,20 @@ def read_csv(file_name):
     return data
 
 
-def write_csv(file_name, db):
-    with open(os.path.join(__location__, f'{file_name}.csv')) as f:
-        rows = csv.reader(f)
+def write_csv(file_name, db, head):
     csv_file = open(f'{file_name}.csv', 'w', newline="")
     writer = csv.writer(csv_file)
-    writer.writerow([i[0] for i in rows])
+    writer.writerow(head)
     for i in db.search(file_name).table:
         writer.writerow(i.values())
     csv_file.close()
+
+
+def get_head(file_name):
+    with open(os.path.join(__location__, f'{file_name}.csv')) as f:
+        rows = csv.reader(f)
+        head = [i for i in rows]
+    return head[0]
 
 
 # add in code for a Database class
@@ -92,37 +97,6 @@ class Table:
                     dict_temp[key] = item1[key]
             temps.append(dict_temp)
         return temps
-
-    def pivot_table(self, keys_to_pivot_list, keys_to_aggreagte_list, aggregate_func_list):
-
-        unique_values_list = []
-        for key_item in keys_to_pivot_list:
-            temp = []
-            for dict in self.table:
-                if dict[key_item] not in temp:
-                    temp.append(dict[key_item])
-            unique_values_list.append(temp)
-
-        # combination of unique value lists
-        import combination_gen
-        comb_list = combination_gen.gen_comb_list(unique_values_list)
-
-        pivot_table = []
-        # filter each combination
-        for item in comb_list:
-            temp_filter_table = self
-            for i in range(len(item)):
-                temp_filter_table = temp_filter_table.filter(
-                    lambda x: x[keys_to_pivot_list[i]] == item[i])
-
-            # aggregate over the filtered table
-            aggregate_val_list = []
-            for i in range(len(keys_to_aggreagte_list)):
-                aggregate_val = temp_filter_table.aggregate(aggregate_func_list[i],
-                                                            keys_to_aggreagte_list[i])
-                aggregate_val_list.append(aggregate_val)
-            pivot_table.append([item, aggregate_val_list])
-        return pivot_table
 
     def insert(self, new_data):
         self.table.append(new_data)

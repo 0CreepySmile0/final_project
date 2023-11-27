@@ -1,8 +1,6 @@
 # import database module
-import csv, os
-
-from database import Database, Table, read_csv, write_csv
-# define a funcion called initializing
+from database import Database, Table, read_csv, write_csv, get_head
+# define a function called initializing
 db = Database()
 
 def initializing():
@@ -32,7 +30,7 @@ def initializing():
     # add all these tables to the database
 
 
-# define a funcion called login
+# define a function called login
 
 def login():
     user = input("Username : ")
@@ -51,10 +49,10 @@ def login():
 
 # define a function called exit
 def exit():
-    write_csv("login", db)
-    write_csv("Project_table", db)
-    write_csv("Advisor_pending_request", db)
-    write_csv("Member_pending_request", db)
+    write_csv("login", db, get_head("login"))
+    write_csv("Project_table", db, get_head("Project_table"))
+    write_csv("Advisor_pending_request", db, get_head("Advisor_pending_request"))
+    write_csv("Member_pending_request", db, get_head("Member_pending_request"))
 
 # here are things to do in this function:
    # write out all the tables that have been modified to the corresponding csv files
@@ -66,8 +64,7 @@ def exit():
 # make calls to the initializing and login functions defined above
 
 initializing()
-# val = login()
-db.search("Project_table").insert({"ProjectID": "8265489", "Title": "Noob", "Lead": "Danny", "Member1": "John", "Member2": "Sam", "Advisor": "Josh", "Status": "single"})
+val = login()
 # based on the return value for login, activate the code that performs activities according to the role defined for that person_id
 
 # if val[1] = 'admin':
@@ -83,5 +80,5 @@ db.search("Project_table").insert({"ProjectID": "8265489", "Title": "Noob", "Lea
 # elif val[1] = 'advisor':
     # see and do advisor related activities
 
-# once everyhthing is done, make a call to the exit function
+# once everything is done, make a call to the exit function
 exit()
