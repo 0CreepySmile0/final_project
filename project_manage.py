@@ -1,5 +1,5 @@
 # import database module
-from database import Database, Table, read_csv, write_csv, get_head, gen_project_id
+from database import Database, Table, read_csv, write_csv, get_head, gen_project_id, get_info_dict
 from datetime import date
 # define a function called initializing
 db = Database()
@@ -14,23 +14,33 @@ class Admin:
         self.__role = info_dict["role"]
         self.__database = database
 
-    @property
-    def db(self):
-        return self.__database
+    def __str__(self):
+        return f"""Hello {self.__user}, you logged in as {self.__role}
+First name: {self.__first}
+Last name: {self.__last}
+ID: {self.__id}
+"""
 
-    def create(self, table_name):
-        self.db.insert(Table(table_name, []))
+    def see_database(self):
+        print(self.__database)
 
-    def update(self, table_name, person_id, key, value):
-        self.db.search(table_name).update(person_id, key, value)
+    def create_table(self, table_name):
+        self.__database.insert(Table(table_name, []))
 
-    def remove(self, table_name):
-        n = 0
-        for i in self.db.database:
-            if i.table_name == table_name:
-                self.db.database.pop(n)
-            else:
-                n += 1
+    def insert_table(self, table):
+        self.__database.insert(table)
+
+    def insert_row(self, table_name, data):
+        self.__database.search(table_name).insert(data)
+
+    def update_table(self, table_name, row, key, value):
+        self.__database.search(table_name).update(row, key, value)
+
+    def remove_table(self, table_name):
+        self.__database.remove(table_name)
+
+    def remove_row(self, table_name, row):
+        self.__database.search(table_name).remove(row)
 
 
 class Student:
@@ -78,17 +88,6 @@ class Student:
         login_table = self.__database.search("login")
         login_row = login_table.get_row(lambda x: x["ID"] == self.__id)
         login_table.update(login_row, "role", "lead")
-
-
-def get_info_dict(db, person_id):
-    temp = db.search("persons")
-    temp1 = temp.join(db.search("login"), "ID")
-    for i in temp1.table:
-        if i["ID"] == person_id:
-            return {"ID": i["ID"], "first": i["fist"], "last": i["last"], "user": i["username"],
-                    "role": i["role"]}
-        else:
-            continue
 
 
 def initializing():
