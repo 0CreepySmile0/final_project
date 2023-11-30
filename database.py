@@ -24,6 +24,17 @@ def write_csv(file_name, db, head):
     csv_file.close()
 
 
+def get_info_dict(db, person_id):
+    temp = db.search("persons")
+    temp1 = temp.join(db.search("login"), "ID")
+    for i in temp1.table:
+        if i["ID"] == person_id:
+            return {"ID": i["ID"], "first": i["fist"], "last": i["last"], "user": i["username"],
+                    "role": i["role"]}
+        else:
+            continue
+
+
 def get_head(file_name):
     with open(os.path.join(__location__, f'{file_name}.csv')) as f:
         rows = csv.reader(f)
@@ -43,8 +54,17 @@ class Database:
     def __init__(self):
         self.database = []
 
+    def __str__(self):
+        return ",".join([i.table_name + ':' + str(i.table) for i in self.database])
+
     def insert(self, table):
         self.database.append(table)
+
+    def remove(self, table_name):
+        for i in self.database:
+            if i.table_name == table_name:
+                self.database.remove(i)
+                break
 
     def search(self, table_name):
         for table in self.database:
@@ -107,6 +127,9 @@ class Table:
 
     def insert(self, new_data):
         self.table.append(new_data)
+
+    def remove(self, row):
+        self.table.pop(row)
 
     def get_row(self, condition):
         row = 0
