@@ -1,6 +1,6 @@
 # try wrapping the code below that reads a persons.csv file in a class and make it more general such that it can read in any csv file
 
-import csv, os, copy
+import csv, os, copy, datetime, random
 
 __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -29,6 +29,13 @@ def get_head(file_name):
         rows = csv.reader(f)
         head = [i for i in rows]
     return head[0]
+
+
+def gen_project_id(lead_id):
+    _1234 = "".join([random.choice(str(datetime.datetime.now()).split(".")[1]) for i in range(4)])
+    _5 = random.randrange(9)
+    _67 = "".join([random.choice(lead_id) for i in range(2)])
+    return f"{_1234}{_5}{_67}"
 
 
 # add in code for a Database class
@@ -101,12 +108,21 @@ class Table:
     def insert(self, new_data):
         self.table.append(new_data)
 
-    def update(self, person_id, key, value):
+    def get_row(self, condition):
+        row = 0
         for i in self.table:
-            if i["ID"] == person_id:
+            if condition(i):
+                return row
+            else:
+                row += 1
+
+    def update(self, row, key, value):
+        n = 0
+        for i in self.table:
+            if row == n:
                 i[key] = value
             else:
-                continue
+                n += 1
 
     def __str__(self):
         return self.table_name + ':' + str(self.table)
