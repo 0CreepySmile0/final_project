@@ -5,12 +5,15 @@
 
 ---
 - Managing the database
+  - Can create table
   - Can update all tables
+  - Can remove table
 ## Student
 
 ---
 - See if there are pending requests to become members of already created projects
 - Accept or deny the requests
+  - Login table needs to be updated
   - Member_pending_request table needs to be updated
   - Project table needs to be updated
 - Create a project and become a lead; must deny all member requests first
@@ -40,6 +43,7 @@
 ---
 - See request to be an advisor
 - Accept or deny the requests
+  - Login table needs to be updated
   - Advisor_pending_request table needs to be updated
   - Project table needs to be updated
 - See details of all the project
@@ -49,7 +53,9 @@
 ---
 - See request to be an advisor
 - Accept or deny the requests
+  - Login table needs to be updated
   - Accept for projects eventually serving as an advisor
   - Deny for projects not eventually serving as an advisor
 - See details of all the project
 - Approve the project
+- Approve the final report
