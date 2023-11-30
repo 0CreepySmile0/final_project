@@ -139,10 +139,8 @@ def login():
 
 # define a function called exit
 def exit():
-    write_csv("login", db, get_head("login"))
-    write_csv("Project_table", db, get_head("Project_table"))
-    write_csv("Advisor_pending_request", db, get_head("Advisor_pending_request"))
-    write_csv("Member_pending_request", db, get_head("Member_pending_request"))
+    for i in db.database:
+        write_csv(i.table_name, db, get_head(i.table_name))
 
 # here are things to do in this function:
    # write out all the tables that have been modified to the corresponding csv files
