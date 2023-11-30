@@ -121,6 +121,7 @@ class Table:
         for i in self.table:
             if row == n:
                 i[key] = value
+                break
             else:
                 n += 1
 
