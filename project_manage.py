@@ -106,6 +106,9 @@ class Lead:
         self.__user = info_dict["user"]
         self.__role = info_dict["role"]
         self.__database = database
+        my_project = self.__database.search("Project_table").\
+            filter(lambda x: x["Lead"] == self.__id)
+        self.__project_id = my_project.table[0]["ProjectID"]
 
     def __str__(self):
         return f"""Hello {self.__user}, you logged in as {self.__role}
@@ -145,6 +148,63 @@ Member1: {member1}
 Member2: {member2}
 Advisor: {advisor}
 Status: {temp["Status"]}""")
+
+    def modify_project_info(self, key, value):
+        my_project = self.__database.search("Project_table")
+        row = my_project.get_row(lambda x: x["Lead"] == self.__id)
+        my_project.update(row, key, value)
+
+    def see_pending_request(self):
+        pending_member = self.__database.search("Member_pending_request").\
+            filter(lambda x: x["ProjectID"] == self.__project_id and x["Response"] == "Pending").\
+            table
+        pending_advisor = self.__database.search("Advisor_pending_request").\
+            filter(lambda x: x["ProjectID"] == self.__project_id and x["Response"] == "Pending").\
+            table
+        if len(pending_member) + len(pending_advisor) == 0:
+            print("No pending request now, you can send request to student to be member and "
+                  "faculty to be advisor")
+        else:
+            print("Pending request in my project")
+            if len(pending_member) != 0:
+                print("Pending Member")
+                for i in range(len(pending_member)):
+                    temp_dict = get_info_dict(self.__database, pending_member[i]["PersonID"])
+                    print(f'{i+1}. {temp_dict["first"]} {temp_dict["last"]}')
+            if len(pending_advisor) != 0:
+                print("Pending Advisor")
+                temp_dict = get_info_dict(self.__database, pending_advisor[0]["PersonID"])
+                print(f'{temp_dict["first"]} {temp_dict["last"]}')
+
+    def send_request(self, person_id):
+        person_info = get_info_dict(self.__database, person_id)
+        my_project = self.__database.search("Project_table")
+        row = my_project.get_row(lambda x: x["Lead"] == self.__id)
+        if person_info["role"] == "student":
+            data = {
+                "ProjectID": self.__project_id,
+                "PersonID": person_id,
+                "to_be_member": person_info["username"],
+                "Response": "Pending",
+                "Response_Date": "Pending"
+            }
+            self.__database.search("Member_pending_request").insert(data)
+            if my_project[row]["Member1"] == "-":
+                my_project.update(row, "Member1", f"{person_id} (Pending)")
+            else:
+                my_project.update(row, "Member2", f"{person_id} (Pending)")
+        elif person_info["role"] == "faculty":
+            data = {
+                "ProjectID": self.__project_id,
+                "PersonID": person_id,
+                "to_be_advisor": person_info["username"],
+                "Response": "Pending",
+                "Response_Date": "Pending"
+            }
+            self.__database.search("Advisor_pending_request").insert(data)
+            my_project.update(row, "Advisor", f"{person_id} (Pending)")
+        else:
+            print("You can only send request to student or faculty")
 
 
 def initializing():
