@@ -18,8 +18,7 @@ class Admin:
         return f"""Hello {self.__user}, you logged in as {self.__role}
 First name: {self.__first}
 Last name: {self.__last}
-ID: {self.__id}
-"""
+ID: {self.__id}"""
 
     def see_database(self):
         print(self.__database)
@@ -52,8 +51,15 @@ class Student:
         self.__role = info_dict["role"]
         self.__database = database
 
+    def __str__(self):
+        return f"""Hello {self.__user}, you logged in as {self.__role}
+First name: {self.__first}
+Last name: {self.__last}
+ID: {self.__id}"""
+
     def see_request(self):
-        print(self.__database.search("Member_pending_request").table)
+        print(self.__database.search("Member_pending_request").
+              filter(lambda x: self.__id == x["PersonID"]).table)
 
     def response_request(self, project_id, response):
         member_pending = self.__database.search("Member_pending_request")
@@ -67,7 +73,7 @@ class Student:
         if response == "A":
             member_pending.update(mem_pen_row, "Response", "Accept")
             login_table.update(login_row, "role", "member")
-            if project.table[project_row]["Member1"] == "-":
+            if project.table[project_row]["Member1"] == f"{self.__id} (Pending)":
                 project.update(project_row, "Member1", self.__id)
             else:
                 project.update(project_row, "Member2", self.__id)
@@ -88,6 +94,56 @@ class Student:
         login_table = self.__database.search("login")
         login_row = login_table.get_row(lambda x: x["ID"] == self.__id)
         login_table.update(login_row, "role", "lead")
+
+
+class Lead:
+
+    def __init__(self, info_dict, database):
+        self.__id = info_dict["ID"]
+        self.__first = info_dict["first"]
+        self.__last = info_dict["last"]
+        self.__user = info_dict["user"]
+        self.__role = info_dict["role"]
+        self.__database = database
+
+    def __str__(self):
+        return f"""Hello {self.__user}, you logged in as {self.__role}
+First name: {self.__first}
+Last name: {self.__last}
+ID: {self.__id}"""
+
+    def project_status(self):
+        temp = self.__database.search("Project_table").filter(lambda x: x["Lead"] == self.__id)
+        if temp["Member1"] == "-":
+            member1 = "-"
+        elif "Pending" in temp["Member1"]:
+            member1_id = temp["Member1"].split(" ")[0]
+            member1_info = get_info_dict(self.__database, member1_id)
+            member1 = f'{member1_info["first"]} {member1_info["last"]} (Pending)'
+        else:
+            member1_info = get_info_dict(self.__database, temp["Member1"])
+            member1 = f'{member1_info["first"]} {member1_info["last"]}'
+        if temp["Member2"] == "-":
+            member2 = "-"
+        elif "Pending" in temp["Member2"]:
+            member2_id = temp["Member2"].split(" ")[0]
+            member2_info = get_info_dict(self.__database, member2_id)
+            member2 = f'{member2_info["first"]} {member2_info["last"]} (Pending)'
+        else:
+            member2_info = get_info_dict(self.__database, temp["Member2"])
+            member2 = f'{member2_info["first"]} {member2_info["last"]}'
+        if temp["Advisor"] == "-":
+            advisor = "-"
+        else:
+            advisor_info = get_info_dict(self.__database, temp["Advisor"])
+            advisor = f'{advisor_info["first"]} {advisor_info["last"]}'
+        print(f"""Project Title: {temp["Title"]}
+Project ID: {temp["ProjectID"]}
+Lead: {self.__first} {self.__last}
+Member1: {member1}
+Member2: {member2}
+Advisor: {advisor}
+Status: {temp["Status"]}""")
 
 
 def initializing():
