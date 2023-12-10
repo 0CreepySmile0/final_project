@@ -21,7 +21,8 @@ Last name: {self.__last}
 ID: {self.__id}"""
 
     def see_database(self):
-        print(self.__database)
+        for i in self.__database.database:
+            print(i)
 
     def create_table(self, table_name):
         self.__database.insert(Table(table_name, []))
