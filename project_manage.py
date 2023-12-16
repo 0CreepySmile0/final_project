@@ -1,7 +1,5 @@
-# import database module
 from database import Database, Table, read_csv, write_csv, get_head, gen_project_id, get_info_dict
 from datetime import date
-# define a function called initializing
 db = Database()
 
 
@@ -289,6 +287,75 @@ Status: {temp["Status"]}""")
                 print(f'{temp_dict["first"]} {temp_dict["last"]}')
 
 
+class Faculty:
+
+    def __init__(self, info_dict, database):
+        self.__id = info_dict["ID"]
+        self.__first = info_dict["first"]
+        self.__last = info_dict["last"]
+        self.__user = info_dict["user"]
+        self.__role = info_dict["role"]
+        self.__database = database
+
+    def __str__(self):
+        return f"""Hello {self.__user}, you logged in as {self.__role}
+First name: {self.__first}
+Last name: {self.__last}
+ID: {self.__id}"""
+
+    def see_request(self):
+        print(self.__database.search("Advisor_pending_request").
+              filter(lambda x: self.__id == x["PersonID"]).table)
+
+    def response_request(self, project_id, response):
+        advisor_pending = self.__database.search("Advisor_pending_request")
+        ad_pen_row = advisor_pending.get_row(lambda x: x["ProjectID"] == project_id
+                                             and x["PersonID"] == self.__id)
+        project = self.__database.search("Project_table")
+        project_row = project.get_row(lambda x: x["ProjectID"] == project_id)
+        login_table = self.__database.search("login")
+        login_row = login_table.get_row(lambda x: x["ID"] == self.__id)
+        advisor_pending.update(ad_pen_row, "Response_date", date.today())
+        if response == "A":
+            advisor_pending.update(ad_pen_row, "Response", "Accept")
+            login_table.update(login_row, "role", "advisor")
+            project.update(project_row, "Advisor", self.__id)
+            return Advisor(get_info_dict(db, self.__id), self.__database)
+        elif response == "D":
+            advisor_pending.update(ad_pen_row, "Response", "Deny")
+            return None
+
+    def see_project_table(self):
+        project_table = self.__database.search("Project_table")
+        for i in project_table.table:
+            print(i)
+
+    def eval_project(self, project_id, result):
+        project_table = self.__database.search("Project_table")
+        row = project_table.get_row(lambda x: x["ProjectID"] == project_id)
+        project_table.update(row, "Status", result)
+
+
+class Advisor:
+
+    def __init__(self, info_dict, database):
+        self.__id = info_dict["ID"]
+        self.__first = info_dict["first"]
+        self.__last = info_dict["last"]
+        self.__user = info_dict["user"]
+        self.__role = info_dict["role"]
+        self.__database = database
+        my_project = self.__database.search("Project_table"). \
+            filter(lambda x: x["Advisor"] == self.__id)
+        self.__project_id = my_project.table[0]["ProjectID"]
+
+    def __str__(self):
+        return f"""Hello {self.__user}, you logged in as {self.__role}
+First name: {self.__first}
+Last name: {self.__last}
+ID: {self.__id}"""
+
+
 def initializing():
 
 
@@ -306,7 +373,6 @@ def initializing():
     project_table = Table("Project_table", project)
     advisor_pen_table = Table("Advisor_pending_request", advisor_pen)
     member_pen_table = Table("Member_pending_request", member_pen)
-
     db.insert(persons_table)
     db.insert(login_table)
     db.insert(project_table)
