@@ -355,6 +355,21 @@ First name: {self.__first}
 Last name: {self.__last}
 ID: {self.__id}"""
 
+    def see_project_table(self):
+        project_table = self.__database.search("Project_table")
+        for i in project_table.table:
+            print(i)
+
+    def approve_project(self):
+        project_table = self.__database.search("Project_table")
+        row = project_table.get_row(lambda x: x["ProjectID"] == self.__project_id)
+        project_table.update(row, "Status", "Approved")
+
+    def approve_final_report(self):
+        project_table = self.__database.search("Project_table")
+        row = project_table.get_row(lambda x: x["ProjectID"] == self.__project_id)
+        project_table.update(row, "Status", "Final report approved")
+
 
 def initializing():
 
