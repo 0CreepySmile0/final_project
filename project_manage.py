@@ -593,9 +593,9 @@ Last name: {self.__last}
 ID: {self.__id}"""
 
     def see_project_table(self):
-        project_table = self.__database.search("Project_table")
-        for i in project_table.table:
-            print(i)
+        project_table = self.__database.search("Project_table").table
+        for i in range(len(project_table)):
+            print(f"{i + 1}. {project_table[i]}")
 
     def approve_project(self):
         project_table = self.__database.search("Project_table")
@@ -607,6 +607,19 @@ ID: {self.__id}"""
         row = project_table.get_row(lambda x: x["ProjectID"] == self.__project_id)
         project_table.update(row, "Status", "Final report approved")
 
+    def operation(self, choice):
+        if choice == "1":
+            """See Project table"""
+            self.see_project_table()
+        elif choice == "2":
+            """Approve Project you are advising"""
+            self.approve_project()
+            print("Project approved")
+        elif choice == "3":
+            """Approve Project's final report you are advising"""
+            self.approve_final_report()
+            print("Final report approved")
+
 
 class Performance:
 
@@ -614,6 +627,8 @@ class Performance:
         self.__info = login_info
 
     def interface(self):
+        # Return choices string and object for each role
+        # Return None if login_info is None to get out of this method
         if self.__info is None:
             return None
         if self.__info[1] == "admin":
@@ -656,10 +671,17 @@ What to do? (leave it blank to exit): """
 3. See Project table
 4. Evaluate Project
 What to do? (leave it blank to exit): """
-        # elif self.__info[1] == "advisor":
+        elif self.__info[1] == "advisor":
+            user = Faculty(get_info_dict(db, self.__info[0]), db)
+            txt = f"""{user}
+1. See Project table
+2. Approve Project you are advising
+3. Approve Project's final report you are advising
+What to do? (leave it blank to exit): """
         return txt, user
 
     def perform(self, number_of_choice):
+        # Ask user what to do and perform activities of each role
         txt, user = self.interface()
         choice = input(txt)
         while choice.strip() != "":
@@ -675,6 +697,8 @@ What to do? (leave it blank to exit): """
         return None
 
     def activity(self):
+        # This method perform activities of each role
+        # This is the core of the program
         if self.__info is None:
             return None
         if self.__info[1] == "admin":
@@ -692,20 +716,18 @@ What to do? (leave it blank to exit): """
         elif self.__info[1] == "faculty":
             n_choice = 4
             self.perform(n_choice)
+        elif self.__info[1] == "advisor":
+            n_choice = 3
+            self.perform(n_choice)
 
 
 def initializing():
-
-
-# here are things to do in this function:
-
-    # create an object to read all csv files that will serve as a persistent state for this program
+    # This function read all csv file in directory and store in database
     persons = read_csv("persons")
     log_in = read_csv("login")
     project = read_csv("Project_table")
     advisor_pen = read_csv("Advisor_pending_request")
     member_pen = read_csv("Member_pending_request")
-    # create all the corresponding tables for those csv files
     persons_table = Table("persons", persons)
     login_table = Table("login", log_in)
     project_table = Table("Project_table", project)
@@ -716,41 +738,34 @@ def initializing():
     db.insert(project_table)
     db.insert(advisor_pen_table)
     db.insert(member_pen_table)
-    # see the guide how many tables are needed
 
-    # add all these tables to the database
-
-
-# define a function called login
 
 def login():
+    # Ask user to input their username and password
     user = input("Username : ")
     password = input("Password : ")
     if user.strip() == "" or password.strip() == "":
+        #  return None when user input nothing or just white space
         return None
     for i in db.search("login").table:
         if i["username"] == user and i["password"] == password:
             return [i["ID"], i["role"]]
+    # return empty string when username or password is incorrect
     return ""
 
-# here are things to do in this function:
-   # add code that performs a login task
-        # ask a user for a username and password
-        # returns [ID, role] if valid, otherwise returning None
 
-
-# define a function called exit
 def exit():
+    # This function write csv file used data from database
     for i in db.database:
         write_csv(i.table_name, db, get_head(i.table_name))
 
 
-# here are things to do in this function:
-   # write out all the tables that have been modified to the corresponding csv files
-   # By now, you know how to read in a csv file and transform it into a list of dictionaries. For this project, you also need to know how to do the reverse, i.e., writing out to a csv file given a list of dictionaries. See the link below for a tutorial on how to do this:
-   
-   # https://www.pythonforbeginners.com/basics/list-of-dictionaries-to-csv-in-python
 def get_value(txt1, txt2, list_of_something):
+    # This function will ask user to input index of item they want to do something with it
+    # txt1 is text message that ask user what to input
+    # txt2 is text message that warn user to input only defined number
+    # list_of_something is a list of choice for user to select
+    # If this function return None, get out of the function that it or the program will raise error
     for i in range(len(list_of_something)):
         print(f"{i + 1}. {list_of_something[i]}")
     user_input = input(txt1)
@@ -760,10 +775,10 @@ def get_value(txt1, txt2, list_of_something):
         user_input = input(txt2)
         if user_input.strip() == "":
             return None
+    #     return None when user input nothing or just white space
     return list_of_something[int(user_input)-1]
 
 
-# make calls to the initializing and login functions defined above
 initializing()
 print("Enter your username and password (leave one of them blank to exit)")
 val = login()
@@ -781,21 +796,4 @@ else:
     else:
         print()
         Performance(val).activity()
-
-# based on the return value for login, activate the code that performs activities according to the role defined for that person_id
-
-# if val[1] = 'admin':
-    # see and do admin related activities
-# elif val[1] = 'student':
-    # see and do student related activities
-# elif val[1] = 'member':
-    # see and do member related activities
-# elif val[1] = 'lead':
-    # see and do lead related activities
-# elif val[1] = 'faculty':
-    # see and do faculty related activities
-# elif val[1] = 'advisor':
-    # see and do advisor related activities
-
-# once everything is done, make a call to the exit function
 exit()
