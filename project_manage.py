@@ -20,7 +20,7 @@ ID: {self.__id}"""
 
     def see_database(self):
         for i in self.__database.database:
-            print(i.table_name)
+            print(f"Table Name: {i.table_name}")
             n = 1
             for j in i.table:
                 print(f"{n}. {j}")
@@ -48,7 +48,20 @@ ID: {self.__id}"""
     def operation(self, choice):
         if choice == "1":
             """See Database"""
-            self.see_database()
+            txt1_name = "Which table you would like to update? " \
+                        "(input only number or leave it blank to cancel): "
+            txt2_name = "Input number of table again (leave it blank to cancel): "
+            table_name_list = [i.table_name for i in self.__database.database]
+            table_name_list.append("All")
+            table_name = get_value(txt1_name, txt2_name, table_name_list)
+            if table_name is None:
+                return None
+            if table_name == "All":
+                self.see_database()
+            else:
+                table = self.__database.search(table_name).table
+                for i in range(len(table)):
+                    print(f"{i+1}. {table[i]}")
         elif choice == "2":
             """Create Table"""
             table_name = input("Input name for this table (leave it blank to cancel): ")
@@ -538,7 +551,7 @@ def perform(list_of_login):
 What to do? (leave it blank to exit): """
         choice = input(txt)
         while choice.strip() != "":
-            while choice not in [str(i + 1) for i in range(7)]:
+            while choice not in [str(i + 1) for i in range(6)]:
                 choice = input("Input only number of index: ")
                 if choice.strip() == "":
                     return None
