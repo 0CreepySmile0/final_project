@@ -163,7 +163,7 @@ ID: {self.__id}"""
         for i in range(len(req_table)):
             print(f"{i+1}. {req_table[i]}")
 
-    def response_request(self, project_id, response):
+    def respond_request(self, project_id, response):
         member_pending = self.__database.search("Member_pending_request")
         mem_pen_row = member_pending.get_row(lambda x: x["ProjectID"] == project_id
                                              and x["PersonID"] == self.__id)
@@ -210,7 +210,7 @@ ID: {self.__id}"""
                 return None
             self.see_request()
         elif choice == "2":
-            """Response Request"""
+            """Respond Request"""
             if len(req_table) == 0:
                 print("No request, so nothing to respond now")
                 return None
@@ -227,9 +227,12 @@ ID: {self.__id}"""
             if response is None:
                 return None
             print("Response sent!")
-            return self.response_request(project_id, response)
+            return self.respond_request(project_id, response)
         elif choice == "3":
             """Create Project"""
+            if len(req_table) != 0:
+                print("You must deny all pending request before creating project")
+                return None
             title = input("Name your project title (leave it blank to cancel): ")
             if title.strip() == "":
                 return None
@@ -494,10 +497,12 @@ Last name: {self.__last}
 ID: {self.__id}"""
 
     def see_request(self):
-        print(self.__database.search("Advisor_pending_request").
-              filter(lambda x: self.__id == x["PersonID"]).table)
+        req_table = self.__database.search("Advisor_pending_request").\
+              filter(lambda x: self.__id == x["PersonID"]).table
+        for i in range(len(req_table)):
+            print(f"{i+1}. {req_table[i]}")
 
-    def response_request(self, project_id, response):
+    def respond_request(self, project_id, response):
         advisor_pending = self.__database.search("Advisor_pending_request")
         ad_pen_row = advisor_pending.get_row(lambda x: x["ProjectID"] == project_id
                                              and x["PersonID"] == self.__id)
@@ -506,24 +511,66 @@ ID: {self.__id}"""
         login_table = self.__database.search("login")
         login_row = login_table.get_row(lambda x: x["ID"] == self.__id)
         advisor_pending.update(ad_pen_row, "Response_date", date.today())
-        if response == "A":
+        if response == "Accept":
             advisor_pending.update(ad_pen_row, "Response", "Accept")
             login_table.update(login_row, "role", "advisor")
             project.update(project_row, "Advisor", self.__id)
-            return Advisor(get_info_dict(db, self.__id), self.__database)
-        elif response == "D":
+            return [self.__id, "advisor"]
+        elif response == "Deny":
             advisor_pending.update(ad_pen_row, "Response", "Deny")
             return None
 
     def see_project_table(self):
-        project_table = self.__database.search("Project_table")
-        for i in project_table.table:
-            print(i)
+        project_table = self.__database.search("Project_table").table
+        for i in range(len(project_table)):
+            print(f"{i+1}. {project_table[i]}")
 
     def eval_project(self, project_id, result):
         project_table = self.__database.search("Project_table")
         row = project_table.get_row(lambda x: x["ProjectID"] == project_id)
         project_table.update(row, "Status", result)
+
+    def operation(self, choice):
+        req_table = self.__database.search("Advisor_pending_request").\
+              filter(lambda x: self.__id == x["PersonID"]).table
+        if choice == "1":
+            """See Request"""
+            if len(req_table) == 0:
+                print("No request to be advisor now")
+                return None
+            self.see_request()
+        elif choice == "2":
+            """Respond Request"""
+            if len(req_table) == 0:
+                print("No request, so nothing to respond now")
+                return None
+            txt1 = "Which project you want to respond? " \
+                   "(input only number or leave it blank to cancel): "
+            txt2 = "Input number of index again (leave it blank to cancel): "
+            project = get_value(txt1, txt2, req_table)
+            if project is None:
+                return None
+            project_id = project["ProjectID"]
+            txt1_response = "Your response? (input only number or leave it blank to cancel): "
+            txt2_response = "Input only 1 or 2 (leave it blank to cancel): "
+            response = get_value(txt1_response, txt2_response, ["Accept", "Deny"])
+            if response is None:
+                return None
+            print("Response sent!")
+            return self.respond_request(project_id, response)
+        elif choice == "3":
+            """See Project table"""
+            self.see_project_table()
+        elif choice == "4":
+            """Evaluate Project"""
+            txt1 = "Which project you will evaluate? " \
+                   "(input only number or leave it blank to cancel): "
+            txt2 = "Input number of index again (leave it blank to cancel): "
+            project_table = self.__database.search("Project_table").table
+            project = get_value(txt1, txt2, project_table)
+            result = input("Evaluation Result: ")
+            self.eval_project(project["ProjectID"], result)
+            print("Project evaluated!")
 
 
 class Advisor:
@@ -583,7 +630,7 @@ What to do? (leave it blank to exit): """
             user = Student(get_info_dict(db, self.__info[0]), db)
             txt = f"""{user}
 1. See Request
-2. Response Request
+2. Respond Request
 3. Create Project
 What to do? (leave it blank to exit): """
         elif self.__info[1] == "lead":
@@ -601,7 +648,14 @@ What to do? (leave it blank to exit): """
 2. Modify Project Info
 3. See Pending Request
 What to do? (leave it blank to exit): """
-        # elif self.__info[1] == "faculty":
+        elif self.__info[1] == "faculty":
+            user = Faculty(get_info_dict(db, self.__info[0]), db)
+            txt = f"""{user}
+1. See Request
+2. Respond Request
+3. See Project table
+4. Evaluate Project
+What to do? (leave it blank to exit): """
         # elif self.__info[1] == "advisor":
         return txt, user
 
@@ -634,6 +688,9 @@ What to do? (leave it blank to exit): """
             self.perform(n_choice)
         elif self.__info[1] == "member":
             n_choice = 3
+            self.perform(n_choice)
+        elif self.__info[1] == "faculty":
+            n_choice = 4
             self.perform(n_choice)
 
 
@@ -718,9 +775,12 @@ else:
         print("Incorrect username or password try again (leave one of them blank to exit)")
         val = login()
         if val is not None and val != "":
-            print()
             break
-    Performance(val).activity()
+    if val is None:
+        pass
+    else:
+        print()
+        Performance(val).activity()
 
 # based on the return value for login, activate the code that performs activities according to the role defined for that person_id
 
