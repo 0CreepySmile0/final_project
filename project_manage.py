@@ -322,8 +322,6 @@ Status: {temp["Status"]}""")
 
     def send_request(self, person_id):
         person_info = get_info_dict(self.__database, person_id)
-        my_project = self.__database.search("Project_table")
-        row = my_project.get_row(lambda x: x["Lead"] == self.__id)
         if person_info["role"] == "student":
             data = {
                 "ProjectID": self.__project_id,
