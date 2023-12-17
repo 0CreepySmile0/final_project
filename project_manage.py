@@ -153,8 +153,10 @@ Last name: {self.__last}
 ID: {self.__id}"""
 
     def see_request(self):
-        print(self.__database.search("Member_pending_request").
-              filter(lambda x: self.__id == x["PersonID"]).table)
+        req_table = self.__database.search("Member_pending_request").\
+            filter(lambda x: self.__id == x["PersonID"]).table
+        for i in range(len(req_table)):
+            print(f"{i+1}. {req_table[i]}")
 
     def response_request(self, project_id, response):
         member_pending = self.__database.search("Member_pending_request")
@@ -536,7 +538,7 @@ def get_value(txt1, txt2, list_of_something):
     return list_of_something[int(user_input)-1]
 
 
-def perform(list_of_login):
+def interface(list_of_login):
     if list_of_login is None:
         return None
     if list_of_login[1] == "admin":
@@ -549,23 +551,53 @@ def perform(list_of_login):
 5. Remove Table
 6. Remove Row
 What to do? (leave it blank to exit): """
+    elif list_of_login[1] == "student":
+        user = Student(get_info_dict(db, list_of_login[0]), db)
+        txt = f"""{user}
+1. See Request
+2. Response Request
+3. Create Project
+What to do? (leave it blank to exit): """
+    # elif list_of_login[1] == "lead"
+    # elif list_of_login[1] == "member"
+    # elif list_of_login[1] == "faculty"
+    # elif list_of_login[1] == "advisor"
+    return txt, user
+
+
+def perform(txt, user, number_of_choice):
+    choice = input(txt)
+    while choice.strip() != "":
+        while choice not in [str(i + 1) for i in range(number_of_choice)]:
+            choice = input("Input only number of index: ")
+            if choice.strip() == "":
+                return None
+        user.operation(choice)
+        print()
         choice = input(txt)
-        while choice.strip() != "":
-            while choice not in [str(i + 1) for i in range(6)]:
-                choice = input("Input only number of index: ")
-                if choice.strip() == "":
-                    return None
-            user.operation(choice)
-            print()
-            choice = input(txt)
+    return None
+
+
+def activity(list_of_login):
+    txt, user = interface(list_of_login)
+    if list_of_login is None:
         return None
+    if list_of_login[1] == "admin":
+        n_choice = 6
+        perform(txt, user, n_choice)
+    elif list_of_login[1] == "student":
+        n_choice = 3
+        perform(txt, user, n_choice)
 
 
 # make calls to the initializing and login functions defined above
 
 initializing()
 val = login()
-perform(val)
+if val is None:
+    pass
+else:
+    activity(val)
 # based on the return value for login, activate the code that performs activities according to the role defined for that person_id
 
 # if val[1] = 'admin':
