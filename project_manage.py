@@ -201,16 +201,22 @@ ID: {self.__id}"""
         return [self.__id, "lead"]
 
     def operation(self, choice):
+        req_table = self.__database.search("Member_pending_request"). \
+            filter(lambda x: self.__id == x["PersonID"] and x["Response"] == "Pending").table
         if choice == "1":
             """See Request"""
+            if len(req_table) == 0:
+                print("No request to be member now")
+                return None
             self.see_request()
         elif choice == "2":
             """Response Request"""
+            if len(req_table) == 0:
+                print("No request, so nothing to respond now")
+                return None
             txt1 = "Which project you want to respond? " \
                    "(input only number or leave it blank to cancel): "
             txt2 = "Input number of index again (leave it blank to cancel): "
-            req_table = self.__database.search("Member_pending_request"). \
-                filter(lambda x: self.__id == x["PersonID"] and x["Response"] == "Pending").table
             project = get_value(txt1, txt2, req_table)
             if project is None:
                 return None
@@ -252,7 +258,7 @@ ID: {self.__id}"""
 
     def project_status(self):
         temp = self.__database.search("Project_table").\
-            filter(lambda x: x["Lead"] == self.__id).table[0]
+            filter(lambda x: x["ProjectID"] == self.__project_id).table[0]
         if temp["Member1"] == "-":
             member1 = "-"
         elif "Pending" in temp["Member1"]:
@@ -390,7 +396,7 @@ ID: {self.__id}"""
 
     def project_status(self):
         temp = self.__database.search("Project_table").\
-            filter(lambda x: x["Lead"] == self.__id).table[0]
+            filter(lambda x: x["ProjectID"] == self.__project_id).table[0]
         if temp["Member1"] == "-":
             member1 = "-"
         elif "Pending" in temp["Member1"]:
@@ -447,6 +453,28 @@ Status: {temp["Status"]}""")
                 print("Pending Advisor")
                 temp_dict = get_info_dict(self.__database, pending_advisor[0]["PersonID"])
                 print(f'{temp_dict["first"]} {temp_dict["last"]}')
+
+    def operation(self, choice):
+        if choice == "1":
+            """See Project Status"""
+            self.project_status()
+        elif choice == "2":
+            """Modify Project Info"""
+            key_list = get_head("Project_table")
+            txt1 = "Which key you want to modify? " \
+                   "(input only number or leave it blank to cancel): "
+            txt2 = "Input number of index again (leave it blank to cancel): "
+            key = get_value(txt1, txt2, key_list)
+            if key is None:
+                return None
+            value = input("New value (leave it blank to cancel): ")
+            if value.strip() == "":
+                return None
+            self.modify_project_info(key, value)
+            print("Successfully modify info!")
+        elif choice == "3":
+            """See Pending Request"""
+            self.see_pending_request()
 
 
 class Faculty:
@@ -566,7 +594,13 @@ What to do? (leave it blank to exit): """
 3. See Pending Request
 4. Send Request
 What to do? (leave it blank to exit): """
-        # elif self.__info[1] == "member":
+        elif self.__info[1] == "member":
+            user = Member(get_info_dict(db, self.__info[0]), db)
+            txt = f"""{user}
+1. See Project Status
+2. Modify Project Info
+3. See Pending Request
+What to do? (leave it blank to exit): """
         # elif self.__info[1] == "faculty":
         # elif self.__info[1] == "advisor":
         return txt, user
@@ -576,7 +610,7 @@ What to do? (leave it blank to exit): """
         choice = input(txt)
         while choice.strip() != "":
             while choice not in [str(i + 1) for i in range(number_of_choice)]:
-                choice = input("Input only number of index: ")
+                choice = input("Input only number of index (leave it blank to exit): ")
                 if choice.strip() == "":
                     return None
             login_info = user.operation(choice)
@@ -597,6 +631,9 @@ What to do? (leave it blank to exit): """
             self.perform(n_choice)
         elif self.__info[1] == "lead":
             n_choice = 4
+            self.perform(n_choice)
+        elif self.__info[1] == "member":
+            n_choice = 3
             self.perform(n_choice)
 
 
@@ -637,8 +674,6 @@ def login():
     for i in db.search("login").table:
         if i["username"] == user and i["password"] == password:
             return [i["ID"], i["role"]]
-        else:
-            continue
     return ""
 
 # here are things to do in this function:
@@ -684,7 +719,8 @@ else:
         val = login()
         if val is not None and val != "":
             print()
-            Performance(val).activity()
+            break
+    Performance(val).activity()
 
 # based on the return value for login, activate the code that performs activities according to the role defined for that person_id
 
@@ -702,4 +738,4 @@ else:
     # see and do advisor related activities
 
 # once everything is done, make a call to the exit function
-# exit()
+exit()
