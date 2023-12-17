@@ -154,7 +154,7 @@ ID: {self.__id}"""
 
     def see_request(self):
         req_table = self.__database.search("Member_pending_request").\
-            filter(lambda x: self.__id == x["PersonID"]).table
+            filter(lambda x: self.__id == x["PersonID"] and x["Response"] == "Pending").table
         for i in range(len(req_table)):
             print(f"{i+1}. {req_table[i]}")
 
@@ -167,15 +167,15 @@ ID: {self.__id}"""
         login_table = self.__database.search("login")
         login_row = login_table.get_row(lambda x: x["ID"] == self.__id)
         member_pending.update(mem_pen_row, "Response_date", date.today())
-        if response == "A":
+        if response == "Accept":
             member_pending.update(mem_pen_row, "Response", "Accept")
             login_table.update(login_row, "role", "member")
             if project.table[project_row]["Member1"] == f"{self.__id} (Pending)":
                 project.update(project_row, "Member1", self.__id)
             else:
                 project.update(project_row, "Member2", self.__id)
-            return Member(get_info_dict(db, self.__id), self.__database)
-        elif response == "D":
+            return [self.__id, "member"]
+        elif response == "Deny":
             member_pending.update(mem_pen_row, "Response", "Deny")
             return None
 
@@ -193,7 +193,35 @@ ID: {self.__id}"""
         login_table = self.__database.search("login")
         login_row = login_table.get_row(lambda x: x["ID"] == self.__id)
         login_table.update(login_row, "role", "lead")
-        return Lead(get_info_dict(db, self.__id), self.__database)
+        return [self.__id, "lead"]
+
+    def operation(self, choice):
+        if choice == "1":
+            """See Request"""
+            self.see_request()
+        elif choice == "2":
+            """Response Request"""
+            txt1 = "Which project you want to respond? " \
+                   "(input only number or leave it blank to cancel): "
+            txt2 = "Input number of index again (leave it blank to cancel): "
+            req_table = self.__database.search("Member_pending_request"). \
+                filter(lambda x: self.__id == x["PersonID"] and x["Response"] == "Pending").table
+            project = get_value(txt1, txt2, req_table)
+            if project is None:
+                return None
+            project_id = project["ProjectID"]
+            txt1_response = "Your response? (input only number or leave it blank to cancel): "
+            txt2_response = "Input only 1 or 2 (leave it blank to cancel): "
+            response = get_value(txt1_response, txt2_response, ["Accept", "Deny"])
+            if response is None:
+                return None
+            return self.response_request(project_id, response)
+        elif choice == "3":
+            """Create Project"""
+            title = input("Name your project title (leave it blank to cancel): ")
+            if title.strip() == "":
+                return None
+            return self.create_project(title)
 
 
 class Lead:
@@ -572,7 +600,9 @@ def perform(txt, user, number_of_choice):
             choice = input("Input only number of index: ")
             if choice.strip() == "":
                 return None
-        user.operation(choice)
+        list_of_login = user.operation(choice)
+        if list_of_login is not None:
+            return activity(list_of_login)
         print()
         choice = input(txt)
     return None
@@ -614,4 +644,4 @@ else:
     # see and do advisor related activities
 
 # once everything is done, make a call to the exit function
-# exit()
+exit()
