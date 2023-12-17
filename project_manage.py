@@ -48,7 +48,7 @@ ID: {self.__id}"""
     def operation(self, choice):
         if choice == "1":
             """See Database"""
-            txt1_name = "Which table you would like to update? " \
+            txt1_name = "Which table you would like to see? " \
                         "(input only number or leave it blank to cancel): "
             txt2_name = "Input number of table again (leave it blank to cancel): "
             table_name_list = [i.table_name for i in self.__database.database]
@@ -69,6 +69,7 @@ ID: {self.__id}"""
                 return None
             else:
                 self.create_table(table_name)
+                print("Successfully create table!")
         elif choice == "3":
             """Insert Data"""
             txt1 = "Which table you would like to insert data? " \
@@ -81,6 +82,7 @@ ID: {self.__id}"""
             head = get_head(table_name)
             data = [input(f"{i}: ") for i in head]
             self.insert_data(table_name, data)
+            print("Successfully insert data!")
         elif choice == "4":
             """Update Table"""
             txt1_name = "Which table you would like to update? " \
@@ -107,6 +109,7 @@ ID: {self.__id}"""
             row = self.__database.search(table_name).get_row(lambda x: x[key] == row_dict[key])
             new_value = input("Input the new value to update: ")
             self.__database.update(row, key, new_value)
+            print("Successfully update table!")
         elif choice == "5":
             """Remove Table"""
             txt1 = "Which table you want to remove? " \
@@ -117,6 +120,7 @@ ID: {self.__id}"""
             if table_name is None:
                 return None
             self.remove_table(table_name)
+            print("Successfully remove table!")
         elif choice == "6":
             """Remove Row"""
             txt1 = "Which table you want to remove row? " \
@@ -135,6 +139,7 @@ ID: {self.__id}"""
                 return None
             row = self.__database.search(table_name).get_row(lambda x: x == row_dict)
             self.remove_row(table_name, row)
+            print("Successfully remove row!")
 
 
 class Student:
@@ -497,6 +502,63 @@ ID: {self.__id}"""
         project_table.update(row, "Status", "Final report approved")
 
 
+class Performance:
+
+    def __init__(self, login_info):
+        self.__info = login_info
+
+    def interface(self):
+        if self.__info is None:
+            return None
+        if self.__info[1] == "admin":
+            user = Admin(get_info_dict(db, self.__info[0]), db)
+            txt = f"""{user}
+1. See Database
+2. Create Table
+3. Insert Data
+4. Update Table
+5. Remove Table
+6. Remove Row
+What to do? (leave it blank to exit): """
+        elif self.__info[1] == "student":
+            user = Student(get_info_dict(db, self.__info[0]), db)
+            txt = f"""{user}
+1. See Request
+2. Response Request
+3. Create Project
+What to do? (leave it blank to exit): """
+        # elif list_of_login[1] == "lead"
+        # elif list_of_login[1] == "member"
+        # elif list_of_login[1] == "faculty"
+        # elif list_of_login[1] == "advisor"
+        return txt, user
+
+    def perform(self, number_of_choice):
+        txt, user = self.interface()
+        choice = input(txt)
+        while choice.strip() != "":
+            while choice not in [str(i + 1) for i in range(number_of_choice)]:
+                choice = input("Input only number of index: ")
+                if choice.strip() == "":
+                    return None
+            list_of_login = user.operation(choice)
+            if list_of_login is not None:
+                return self.activity()
+            print()
+            choice = input(txt)
+        return None
+
+    def activity(self):
+        if self.__info is None:
+            return None
+        if self.__info[1] == "admin":
+            n_choice = 6
+            self.perform(n_choice)
+        elif self.__info[1] == "student":
+            n_choice = 3
+            self.perform(n_choice)
+
+
 def initializing():
 
 
@@ -566,68 +628,13 @@ def get_value(txt1, txt2, list_of_something):
     return list_of_something[int(user_input)-1]
 
 
-def interface(list_of_login):
-    if list_of_login is None:
-        return None
-    if list_of_login[1] == "admin":
-        user = Admin(get_info_dict(db, list_of_login[0]), db)
-        txt = f"""{user}
-1. See Database
-2. Create Table
-3. Insert Data
-4. Update Table
-5. Remove Table
-6. Remove Row
-What to do? (leave it blank to exit): """
-    elif list_of_login[1] == "student":
-        user = Student(get_info_dict(db, list_of_login[0]), db)
-        txt = f"""{user}
-1. See Request
-2. Response Request
-3. Create Project
-What to do? (leave it blank to exit): """
-    # elif list_of_login[1] == "lead"
-    # elif list_of_login[1] == "member"
-    # elif list_of_login[1] == "faculty"
-    # elif list_of_login[1] == "advisor"
-    return txt, user
-
-
-def perform(txt, user, number_of_choice):
-    choice = input(txt)
-    while choice.strip() != "":
-        while choice not in [str(i + 1) for i in range(number_of_choice)]:
-            choice = input("Input only number of index: ")
-            if choice.strip() == "":
-                return None
-        list_of_login = user.operation(choice)
-        if list_of_login is not None:
-            return activity(list_of_login)
-        print()
-        choice = input(txt)
-    return None
-
-
-def activity(list_of_login):
-    txt, user = interface(list_of_login)
-    if list_of_login is None:
-        return None
-    if list_of_login[1] == "admin":
-        n_choice = 6
-        perform(txt, user, n_choice)
-    elif list_of_login[1] == "student":
-        n_choice = 3
-        perform(txt, user, n_choice)
-
-
 # make calls to the initializing and login functions defined above
-
 initializing()
 val = login()
 if val is None:
     pass
 else:
-    activity(val)
+    Performance(val).activity()
 # based on the return value for login, activate the code that performs activities according to the role defined for that person_id
 
 # if val[1] = 'admin':
@@ -644,4 +651,4 @@ else:
     # see and do advisor related activities
 
 # once everything is done, make a call to the exit function
-exit()
+# exit()
