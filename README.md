@@ -20,7 +20,6 @@
     - all _**modified**_ data in the program will also _**re-write the csv file**_ so _**be careful!**_
 
 - ## Action of each role
-- 
   - ### Admin
    | Action       | Method       | Class   | Completion in % |
    |--------------|--------------|---------|----------------:|
