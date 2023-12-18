@@ -741,10 +741,12 @@ def initializing():
 def login():
     # Ask user to input their username and password
     user = input("Username : ")
-    password = input("Password : ")
-    if user.strip() == "" or password.strip() == "":
-        #  return None when user input nothing or just white space
+    if user.strip() == "":
         return None
+    password = input("Password : ")
+    if password.strip() == "":
+        return None
+    #  return None when user input nothing or just white space
     for i in db.search("login").table:
         if i["username"] == user and i["password"] == password:
             return [i["ID"], i["role"]]
@@ -794,4 +796,6 @@ else:
     else:
         print()
         Performance(val).activity()
+print()
+print("Program exited")
 exit()
