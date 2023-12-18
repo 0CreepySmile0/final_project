@@ -14,7 +14,9 @@
 
 - ## How program work?
     It's simple, just run the program and follow this step!
-    - login with you _**user**_ and _**password**_.
+    - download _**all**_ file from table above nd put it in the _**same**_ directory.
+    - run _**project_manage.py**_.
+    - the program will ask you to input _**username**_ and _**password**_ to login.
     - program will give you a _**set of choices**_ what you can do, simply enter _**index of choice**_ to do what you want. 
     - leave it empty by hitting Enter or input white space to exit the program.
     - all _**modified**_ data in the program will also _**re-write the csv file**_ so _**be careful!**_
@@ -72,4 +74,3 @@
 
 - ## Bug
     Currently, I haven't found the little or outstanding one yet. I already debug most little one for now.
-
